@@ -7,9 +7,9 @@
 
 import UIKit
 enum BrowseSectionType{
-    case newReleases
-    case featuredPlaylist
-    case recommendedTracks
+    case newReleases(viewModel:[NewReleasesCellViewModel])
+    case featuredPlaylist(viewModel:[FeaturedPlaylistCellViewModel])
+    case recommendedTracks(viewModel:[RecommendedTrackCollectionViewModel])
 }
 class HomeViewController: UIViewController {
     //creating collection view compositional layout
@@ -25,6 +25,8 @@ class HomeViewController: UIViewController {
         return spinner
     }()
     
+    private var sections = [BrowseSectionType]()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -34,7 +36,7 @@ class HomeViewController: UIViewController {
                                                             , target: self, action: #selector(didTapSettingMethod))
         configureCollectionView()
         view.addSubview(spinner)
-        // fetchData()
+         fetchData()
         
     }
     override func viewDidLayoutSubviews() {
@@ -44,15 +46,56 @@ class HomeViewController: UIViewController {
     private func configureCollectionView(){
         view.addSubview(collectionView)
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
+        collectionView.register(NewReleaseCollectionViewCell.self, forCellWithReuseIdentifier: NewReleaseCollectionViewCell.identifier)
+        collectionView.register(FeaturedPlaylistCollectionViewCell.self, forCellWithReuseIdentifier: FeaturedPlaylistCollectionViewCell.identifier)
+        collectionView.register(RecommendedTrackCollectionViewCell.self, forCellWithReuseIdentifier: RecommendedTrackCollectionViewCell.identifer)
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = .systemBackground
     }
     
-  
+    
     private func fetchData(){
+        // to fetch the data of api calls collectivily and then notify on main thread when group.leave()==group.enter()
+        let group = DispatchGroup()
+        group.enter()
+        group.enter()
+        group.enter()
+        print("Fetching Data")
+        var newReleases:NewReleasesResponse?
+        var featuredPlaylist:FeaturedPlaylistResponse?
+        var recommendations:RecommendationReponse?
         //new releases
+        APICaller.shared.getNewAllReleases { result in
+            defer{
+                group.leave()
+            }
+            switch result{
+            case .success( let model):
+                newReleases = model
+                break
+            case .failure(let error):
+                print("Error occured in getNewAllReleases \(error.localizedDescription)")
+                break
+            }
+        }
+        
+        
         // Feautred Playlist
+        APICaller.shared.getFeaturedPlaylist { result in
+            defer{
+                group.leave()
+            }
+            switch result{
+            case .success(let model):
+                featuredPlaylist = model
+                break
+            case .failure(let error):
+                print("Error occured in getFeaturedResponse \(error.localizedDescription)")
+                break
+            }
+        }
+        
         //Recommendation Tracks
         
         APICaller.shared.getRecommendationGenres { result in
@@ -65,15 +108,52 @@ class HomeViewController: UIViewController {
                         seed.insert(random)
                     }
                 }
-                APICaller.shared.getRecommendations(genres: seed) { _ in
-                    
+                APICaller.shared.getRecommendations(genres: seed) { recommendedResult in
+                    defer{
+                        group.leave()
+                    }
+                    switch recommendedResult{
+                    case .success(let model):
+                        recommendations = model
+                        break
+                    case .failure(let error):
+                        print("Error occured in getRecommendations \(error.localizedDescription)")
+                        break
+                    }
                 }
                 break
             case .failure(let error):
+                print("Error occured in getRecommendationGenres \(error.localizedDescription)")
                 break
             }
         }
+        
+        group.notify(queue: .main) {
+            guard let newAlbums = newReleases?.albums.items,let playlist = featuredPlaylist?.playlists.items,let tracks = recommendations?.tracks else
+            {
+                fatalError("Models are nil")
+                return
+            }
+
+            self.configureModel(newAlbums: newAlbums, playlist: playlist, tracks: tracks)
+        }
+        
     }
+    
+    private func configureModel(newAlbums:[Album],playlist:[Playlist],tracks:[AudioTrack]){
+        sections.append(.newReleases(viewModel: newAlbums.compactMap({
+            return NewReleasesCellViewModel(name: $0.name, artWorkURL: URL(string: $0.images.first?.url ?? ""), numberOfTracks: $0.total_tracks, artisitName: $0.artists.first?.name ?? "-")
+        })))
+        sections.append(.featuredPlaylist(viewModel: playlist.compactMap({
+            return FeaturedPlaylistCellViewModel(name: $0.name, artWork: URL(string: $0.images.first?.url ?? ""), creatorName: $0.owner.display_name)
+        })))
+        
+        sections.append(.recommendedTracks(viewModel: tracks.compactMap({
+            return RecommendedTrackCollectionViewModel(name: $0.name, artistName: $0.artists.first?.name ?? "-", artWorkUrl: URL(string: $0.album.images.first?.url ?? ""))
+        })))
+        collectionView.reloadData()
+    }
+    
     
     @objc func didTapSettingMethod(){
         let vc = SettingViewController()
@@ -87,25 +167,50 @@ class HomeViewController: UIViewController {
 
 extension HomeViewController:UICollectionViewDataSource,UICollectionViewDelegate{
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return 20
+        let type = sections[section]
+        switch type{
+        
+        case .newReleases(let viewModel):
+            return viewModel.count
+        case .featuredPlaylist(let viewModel):
+            return viewModel.count
+        case .recommendedTracks(let viewModel):
+            return viewModel.count
+        }
     }
     func numberOfSections(in collectionView: UICollectionView) -> Int {
-        return 3
+        return sections.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "cell", for: indexPath)
-        if indexPath.section==0{
-            cell.backgroundColor = .systemBlue
-        }
-        else if indexPath.section==1{
-            cell.backgroundColor = .systemGreen
-        }
-        else if indexPath.section==2{
-            cell.backgroundColor = .systemRed
+        
+        let type = sections[indexPath.section]
+        switch type{
+        case .newReleases(let viewModel):
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NewReleaseCollectionViewCell.identifier, for: indexPath) as? NewReleaseCollectionViewCell
+            else{
+                return UICollectionViewCell()
+            }
+            cell.configure(with: viewModel[indexPath.row])
+            
+            return cell
+        case .featuredPlaylist(let viewModel):
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: FeaturedPlaylistCollectionViewCell.identifier, for: indexPath) as? FeaturedPlaylistCollectionViewCell
+            else{
+                return UICollectionViewCell()
+            }
+            cell.configure(with: viewModel[indexPath.row])
+            return cell
+        case .recommendedTracks(let viewModel):
+            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: RecommendedTrackCollectionViewCell.identifer, for: indexPath) as? RecommendedTrackCollectionViewCell
+            else{
+                return UICollectionViewCell()
+            }
+            cell.configure(with: viewModel[indexPath.row])
+            return cell
         }
         
-        return cell
+      
         
     }
     
@@ -150,7 +255,7 @@ extension HomeViewController:UICollectionViewDataSource,UICollectionViewDelegate
             
             // Section
             let section = NSCollectionLayoutSection(group: group)
-           
+            
             return section
         default:
             // Item
