@@ -12,6 +12,11 @@ enum BrowseSectionType{
     case recommendedTracks(viewModel:[RecommendedTrackCollectionViewModel])
 }
 class HomeViewController: UIViewController {
+    
+    private var newAlbums:[Album] = []
+    private var playlist:[Playlist] = []
+    private var tracks:[AudioTrack] = []
+    
     //creating collection view compositional layout
     
     private var collectionView:UICollectionView = UICollectionView(frame: .zero,collectionViewLayout: UICollectionViewCompositionalLayout { sectionIndex, _ in
@@ -49,6 +54,7 @@ class HomeViewController: UIViewController {
         collectionView.register(NewReleaseCollectionViewCell.self, forCellWithReuseIdentifier: NewReleaseCollectionViewCell.identifier)
         collectionView.register(FeaturedPlaylistCollectionViewCell.self, forCellWithReuseIdentifier: FeaturedPlaylistCollectionViewCell.identifier)
         collectionView.register(RecommendedTrackCollectionViewCell.self, forCellWithReuseIdentifier: RecommendedTrackCollectionViewCell.identifer)
+        collectionView.register(HeaderTitleCollectionReusableView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: HeaderTitleCollectionReusableView.identifier)
         collectionView.dataSource = self
         collectionView.delegate = self
         collectionView.backgroundColor = .systemBackground
@@ -139,8 +145,12 @@ class HomeViewController: UIViewController {
         }
         
     }
-    
+   
     private func configureModel(newAlbums:[Album],playlist:[Playlist],tracks:[AudioTrack]){
+        
+        self.newAlbums = newAlbums
+        self.playlist = playlist
+        self.tracks = tracks
         sections.append(.newReleases(viewModel: newAlbums.compactMap({
             return NewReleasesCellViewModel(name: $0.name, artWorkURL: URL(string: $0.images.first?.url ?? ""), numberOfTracks: $0.total_tracks, artisitName: $0.artists.first?.name ?? "-")
         })))
@@ -149,7 +159,7 @@ class HomeViewController: UIViewController {
         })))
         
         sections.append(.recommendedTracks(viewModel: tracks.compactMap({
-            return RecommendedTrackCollectionViewModel(name: $0.name, artistName: $0.artists.first?.name ?? "-", artWorkUrl: URL(string: $0.album.images.first?.url ?? ""))
+            return RecommendedTrackCollectionViewModel(name: $0.name, artistName: $0.artists.first?.name ?? "-", artWorkUrl: URL(string: $0.album?.images.first?.url ?? ""))
         })))
         collectionView.reloadData()
     }
@@ -181,7 +191,13 @@ extension HomeViewController:UICollectionViewDataSource,UICollectionViewDelegate
     func numberOfSections(in collectionView: UICollectionView) -> Int {
         return sections.count
     }
-    
+    func collectionView(_ collectionView: UICollectionView, viewForSupplementaryElementOfKind kind: String, at indexPath: IndexPath) -> UICollectionReusableView {
+        guard kind==UICollectionView.elementKindSectionHeader,let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: HeaderTitleCollectionReusableView.identifier, for: indexPath) as? HeaderTitleCollectionReusableView else{
+            return UICollectionReusableView()
+        }
+        header.configure(with: "CHeck")
+        return header
+    }
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         
         let type = sections[indexPath.section]
@@ -209,12 +225,35 @@ extension HomeViewController:UICollectionViewDataSource,UICollectionViewDelegate
             cell.configure(with: viewModel[indexPath.row])
             return cell
         }
-        
-      
-        
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        collectionView.deselectItem(at: indexPath, animated: true)
+        let section = sections[indexPath.section]
+        switch section{
+        case .featuredPlaylist:
+            let plist = playlist[indexPath.row]
+            let vc = PlaylistViewController(playlist: plist)
+            vc.navigationItem.largeTitleDisplayMode = .never
+            vc.title = plist.name
+            navigationController?.pushViewController(vc, animated: true)
+            break
+        case .newReleases:
+            let album = newAlbums[indexPath.row]
+            let vc = AlbumViewController(album: album)
+            vc.title = album.name
+            vc.navigationItem.largeTitleDisplayMode = .never
+            navigationController?.pushViewController(vc, animated: true)
+            break
+        case .recommendedTracks: break
+        }
     }
     
     private static func createSectionLayout(section:Int)->NSCollectionLayoutSection{
+        
+       let supplementartyView = [NSCollectionLayoutBoundarySupplementaryItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1), heightDimension: .absolute(50)), elementKind: UICollectionView.elementKindSectionHeader, alignment: .top)]
+
+        
         switch section {
         case 0:
             // Item
@@ -229,6 +268,7 @@ extension HomeViewController:UICollectionViewDataSource,UICollectionViewDelegate
             // Section
             let section = NSCollectionLayoutSection(group: horizontalGroup)
             section.orthogonalScrollingBehavior = .groupPaging
+            section.boundarySupplementaryItems = supplementartyView
             return section
         case 1:
             // Item
@@ -243,6 +283,7 @@ extension HomeViewController:UICollectionViewDataSource,UICollectionViewDelegate
             // Section
             let section = NSCollectionLayoutSection(group: horizontalGroup)
             section.orthogonalScrollingBehavior = .continuous
+            section.boundarySupplementaryItems = supplementartyView
             return section
         case 2:
             // Item
@@ -255,7 +296,7 @@ extension HomeViewController:UICollectionViewDataSource,UICollectionViewDelegate
             
             // Section
             let section = NSCollectionLayoutSection(group: group)
-            
+            section.boundarySupplementaryItems = supplementartyView
             return section
         default:
             // Item
@@ -267,6 +308,7 @@ extension HomeViewController:UICollectionViewDataSource,UICollectionViewDelegate
             
             // Section
             let section = NSCollectionLayoutSection(group: group)
+            section.boundarySupplementaryItems = supplementartyView
             return section
         }
     }
