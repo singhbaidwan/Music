@@ -52,11 +52,12 @@ class PlaylistViewController: UIViewController {
                     self?.viewModel = model.tracks.items.compactMap({
                         return RecommendedTrackCollectionViewModel(name: $0.track.name, artistName: $0.track.artists.first?.name ?? "-", artWorkUrl: URL(string: $0.track.album?.images.first?.url ?? ""))
                     })
+                    self?.collectionView.reloadData()
                     break
                 case .failure(let error):
                     break
                 }
-                self?.collectionView.reloadData()
+                
             }
             
         }

@@ -11,9 +11,9 @@ class HeaderTitleCollectionReusableView: UICollectionReusableView {
         static let identifier = "HeaderTitleCollectionReusableView"
     private let label:UILabel = {
         let label = UILabel()
-        label.textColor = .secondaryLabel
+        label.textColor = .label
         label.numberOfLines = 1
-        label.font = .systemFont(ofSize: 18, weight: .bold)
+        label.font = .systemFont(ofSize: 24, weight: .bold)
         return label
     }()
     override init(frame:CGRect)
@@ -28,7 +28,7 @@ class HeaderTitleCollectionReusableView: UICollectionReusableView {
     }
     override func layoutSubviews() {
         super.layoutSubviews()
-        label.frame = CGRect(x: 10, y: 0, width: width-20, height: height)
+        label.frame = CGRect(x: 15, y: 0, width: width-30, height: height)
     }
     func configure(with title:String){
         label.text = title

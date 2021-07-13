@@ -10,6 +10,16 @@ enum BrowseSectionType{
     case newReleases(viewModel:[NewReleasesCellViewModel])
     case featuredPlaylist(viewModel:[FeaturedPlaylistCellViewModel])
     case recommendedTracks(viewModel:[RecommendedTrackCollectionViewModel])
+    var title:String{
+        switch self {
+        case .newReleases:
+            return "New Releases"
+        case .featuredPlaylist:
+            return "Playlist"
+        case .recommendedTracks:
+            return "For You"
+        }
+    }
 }
 class HomeViewController: UIViewController {
     
@@ -195,7 +205,8 @@ extension HomeViewController:UICollectionViewDataSource,UICollectionViewDelegate
         guard kind==UICollectionView.elementKindSectionHeader,let header = collectionView.dequeueReusableSupplementaryView(ofKind: kind, withReuseIdentifier: HeaderTitleCollectionReusableView.identifier, for: indexPath) as? HeaderTitleCollectionReusableView else{
             return UICollectionReusableView()
         }
-        header.configure(with: "CHeck")
+        let headerTitle = sections[indexPath.section].title
+        header.configure(with: headerTitle)
         return header
     }
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
