@@ -7,6 +7,10 @@
 
 import Foundation
 
+struct CategoryPlaylistResponse:Codable{
+    let playlists:PlaylistResponse
+}
+
 struct FeaturedPlaylistResponse:Codable{
     let playlists:PlaylistResponse
 }

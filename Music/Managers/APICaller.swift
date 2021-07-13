@@ -190,9 +190,32 @@ extension APICaller{
         }
     }
     
-//    MARK:- Playlist
-    public func getPlaylistDetails(for playlist:Playlist,completion:@escaping(Result<PlaylistDetailResponse,Error>)->Void){
-        createRequest(with: URL(string: Constants.baseAPIURL + "/playlists/"+playlist.id), type: .GET) { request in
+    
+    //    MARK:- Playlist
+        public func getPlaylistDetails(for playlist:Playlist,completion:@escaping(Result<PlaylistDetailResponse,Error>)->Void){
+            createRequest(with: URL(string: Constants.baseAPIURL + "/playlists/"+playlist.id), type: .GET) { request in
+                let task = URLSession.shared.dataTask(with: request) { data, _, error in
+                    guard let data = data,error==nil else
+                    {
+                        completion(.failure(APIError.failedToGetData))
+                        return
+                    }
+                    do{
+                        let result = try JSONDecoder().decode(PlaylistDetailResponse.self, from: data)
+                        completion(.success(result))
+                    }
+                    catch{
+                        print(error.localizedDescription)
+                        completion(.failure(error))
+                    }
+                }
+                task.resume()
+            }
+        }
+    
+//    MARK:- Categories
+    public func getAllCategories(completion:@escaping(Result<[Category],Error>)->Void){
+        createRequest(with: URL(string: Constants.baseAPIURL+"/browse/categories?limit=50"), type: .GET) { request in
             let task = URLSession.shared.dataTask(with: request) { data, _, error in
                 guard let data = data,error==nil else
                 {
@@ -200,13 +223,37 @@ extension APICaller{
                     return
                 }
                 do{
-                    let result = try JSONDecoder().decode(PlaylistDetailResponse.self, from: data)
-                    completion(.success(result))
+                    let result = try JSONDecoder().decode(AllCategoriesResponse.self, from: data)
+                    //print(result)
+                    completion(.success(result.categories.items))
                 }
                 catch{
-                    print(error.localizedDescription)
                     completion(.failure(error))
                 }
+                
+            }
+            task.resume()
+        }
+    }
+   
+    public func getCategoryPlaylist(category:Category,completion:@escaping(Result<[Playlist],Error>)->Void){
+        createRequest(with: URL(string: Constants.baseAPIURL+"/browse/categories/\(category.id)/playlists?limit=20"), type: .GET) { request in
+            let task = URLSession.shared.dataTask(with: request) { data, _, error in
+                guard let data = data,error==nil else
+                {
+                    completion(.failure(APIError.failedToGetData))
+                    return
+                }
+                do{
+                    let result = try JSONDecoder().decode(CategoryPlaylistResponse.self, from: data)
+                        //JSONSerialization.jsonObject(with: data, options: .allowFragments)
+                    completion(.success(result.playlists.items))
+//                    print(result)
+                }
+                catch{
+                    completion(.failure(error))
+                }
+                
             }
             task.resume()
         }
