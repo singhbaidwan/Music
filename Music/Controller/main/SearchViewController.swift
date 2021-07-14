@@ -6,9 +6,10 @@
 //
 
 import UIKit
+import SafariServices
 
 class SearchViewController: UIViewController,UISearchResultsUpdating {
-
+    
     private let searchController:UISearchController = {
         let searchViewController = UISearchController(searchResultsController: SearchResultViewController())
         searchViewController.searchBar.placeholder = "Artist,Songs,Albums"
@@ -40,6 +41,7 @@ class SearchViewController: UIViewController,UISearchResultsUpdating {
         view.backgroundColor = .systemBackground
         navigationItem.searchController = searchController
         // to get the query text
+        searchController.searchBar.delegate = self
         searchController.searchResultsUpdater = self
         view.addSubview(collectionView)
         collectionView.register(CategoryCollectionViewCell.self, forCellWithReuseIdentifier:CategoryCollectionViewCell.identifier)
@@ -63,10 +65,9 @@ class SearchViewController: UIViewController,UISearchResultsUpdating {
     }
     // to get the query text and update accordingly
     func updateSearchResults(for searchController: UISearchController) {
-        guard let displayController = searchController.searchResultsController as? SearchResultViewController,let query = searchController.searchBar.text,!query.trimmingCharacters(in: .whitespaces).isEmpty
-        else { return }
-        print(query)
+        
         // do searching for given query
+        
     }
 }
 
@@ -92,5 +93,48 @@ extension SearchViewController:UICollectionViewDelegate,UICollectionViewDataSour
         let vc = CategoryViewController(category: category)
         vc.navigationItem.largeTitleDisplayMode = .never
         navigationController?.pushViewController(vc, animated: true)
+    }
+}
+
+extension SearchViewController:UISearchBarDelegate,SearchResultViewControllerDelegate{
+    func showResult(_ result: SearchResult) {
+        switch result{
+        
+        case .artist(model: let model):
+            guard let url = URL(string: model.external_urls["spotify"] ?? "") else {
+                return
+            }
+            let vc = SFSafariViewController(url: url)
+            present(vc, animated: true, completion: nil)
+            break
+        case .album(model: let model):
+            let vc = AlbumViewController(album: model)
+            vc.navigationItem.largeTitleDisplayMode = .never
+            navigationController?.pushViewController(vc, animated: true)
+        case .track(model: let model):
+            break
+        case .playlist(model: let model):
+            let vc = PlaylistViewController(playlist: model)
+            vc.navigationItem.largeTitleDisplayMode = .never
+            navigationController?.pushViewController(vc, animated: true)
+        }
+       
+    }
+    
+    // to prevent the api call rate to get overload we will only make api call when user click on search
+    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+        guard let displayController = searchController.searchResultsController as? SearchResultViewController,let query = searchBar.text,!query.trimmingCharacters(in: .whitespaces).isEmpty
+        else { return }
+        displayController.delegate = self
+        APICaller.shared.searchQuery(with: query) { result in
+            DispatchQueue.main.async {
+                switch result{
+                case .success(let model):
+                    displayController.update(with: model)
+                    break
+                case .failure(let error):break
+                }
+            }
+        }
     }
 }

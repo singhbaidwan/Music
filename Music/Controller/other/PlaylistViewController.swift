@@ -10,7 +10,7 @@ import UIKit
 class PlaylistViewController: UIViewController {
     private let playlist:Playlist
     private var viewModel = [RecommendedTrackCollectionViewModel]()
-    
+    private var tracks = [AudioTrack]()
     private let collectionView = UICollectionView(frame: .zero,collectionViewLayout: UICollectionViewCompositionalLayout(sectionProvider: { _, _ in
         // Item
         let item = NSCollectionLayoutItem(layoutSize: NSCollectionLayoutSize(widthDimension: .fractionalWidth(1.0), heightDimension: .fractionalHeight(1.0)))
@@ -49,6 +49,7 @@ class PlaylistViewController: UIViewController {
             DispatchQueue.main.async {
                 switch result{
                 case .success(let model):
+                    self?.tracks = model.tracks.items.compactMap({ $0.track })
                     self?.viewModel = model.tracks.items.compactMap({
                         return RecommendedTrackCollectionViewModel(name: $0.track.name, artistName: $0.track.artists.first?.name ?? "-", artWorkUrl: URL(string: $0.track.album?.images.first?.url ?? ""))
                     })
@@ -106,7 +107,7 @@ extension PlaylistViewController:UICollectionViewDelegate,UICollectionViewDataSo
         collectionView.deselectItem(at: indexPath, animated: true)
         
         // Play the song
-         
+        PlaybackPresenter.startPlaying(from: self, track: tracks[indexPath.row ])
     }
 }
 
