@@ -107,14 +107,15 @@ extension PlaylistViewController:UICollectionViewDelegate,UICollectionViewDataSo
         collectionView.deselectItem(at: indexPath, animated: true)
         
         // Play the song
-        PlaybackPresenter.startPlaying(from: self, track: tracks[indexPath.row ])
+        PlaybackPresenter.shared.startPlaying(from: self, track: tracks[indexPath.row])
     }
 }
 
 extension PlaylistViewController:PlaylistHeaderCollectionReusableViewDelegate{
     func PlaylistHeaderCollectionReusableViewPlayAll(_ header: PlaylistHeaderCollectionReusableView) {
         // Play all songs
-        print("playing")
+        print("playing all songs")
+        PlaybackPresenter.shared.startPlaying(from: self, tracks: tracks)
     }
     
     
