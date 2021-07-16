@@ -107,7 +107,8 @@ extension PlaylistViewController:UICollectionViewDelegate,UICollectionViewDataSo
         collectionView.deselectItem(at: indexPath, animated: true)
         
         // Play the song
-        PlaybackPresenter.shared.startPlaying(from: self, track: tracks[indexPath.row])
+//        let track = tracks[indexPath.row]
+        PlaybackPresenter.shared.startPlaying(from: self, tracks: tracks)
     }
 }
 

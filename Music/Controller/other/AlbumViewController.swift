@@ -104,7 +104,9 @@ extension AlbumViewController:UICollectionViewDelegate,UICollectionViewDataSourc
         collectionView.deselectItem(at: indexPath, animated: true)
         
         // Play the song
-        PlaybackPresenter.shared.startPlaying(from: self, track: tracks[indexPath.row])
+        var track = tracks[indexPath.row]
+        track.album = self.album
+        PlaybackPresenter.shared.startPlaying(from: self, track: track)
         
     }
 }
@@ -113,7 +115,14 @@ extension AlbumViewController:PlaylistHeaderCollectionReusableViewDelegate{
     func PlaylistHeaderCollectionReusableViewPlayAll(_ header: PlaylistHeaderCollectionReusableView) {
         // Play all songs
         print("playing")
-        PlaybackPresenter.shared.startPlaying(from: self, tracks: tracks)
+        // sticking each track an album that controller is having so that we can show image to the user 
+        let tracksWithAlbum:[AudioTrack] = tracks.compactMap({
+            var track = $0
+            track.album = self.album
+            return track
+        })
+        
+        PlaybackPresenter.shared.startPlaying(from: self, tracks: tracksWithAlbum)
     }
     
     

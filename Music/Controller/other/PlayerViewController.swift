@@ -61,6 +61,9 @@ class PlayerViewController: UIViewController {
         imageView.sd_setImage(with: datasouce?.imageURL, completed: nil)
         controlView.configue(with: datasouce?.songName, with: datasouce?.subtitle)
     }
+    func refereshUI(){
+        configure()
+    }
 }
 
 extension PlayerViewController:PlayerControlViewDelegate{

@@ -16,7 +16,9 @@ protocol PlayerDataSource:AnyObject{
 final class PlaybackPresenter{
     static let shared = PlaybackPresenter()
     private var track:AudioTrack?
+    var index = 0
     private var tracks = [AudioTrack]()
+    var playerVC:PlayerViewController?
     var player:AVPlayer?
     var playerQueue:AVQueuePlayer?
     var currentTrack:AudioTrack?{
@@ -24,44 +26,48 @@ final class PlaybackPresenter{
             return track
         }
         else if let player = self.playerQueue,!tracks.isEmpty{
-            let item = player.currentItem
-            let items = player.items()
-            guard let index = items.firstIndex(where: {$0==item}) else
-            {
-                return nil
-            }
             return tracks[index]
         }
         return nil
     }
-     func startPlaying(from viewController:UIViewController,track:AudioTrack){
-        guard let url = URL(string: track.preview_url ?? "") else {
-            return
-        }
-        player = AVPlayer(url: url)
-        player?.volume = 0.5
-        let vc = PlayerViewController()
-        vc.datasouce = self
-        vc.delegate = self
-        vc.title = track.name
-        self.track = track
-        self.tracks = []
-        viewController.present(UINavigationController(rootViewController: vc), animated: true, completion: { [weak self] in
-            self?.player?.play()
-        })
-    }
+    func startPlaying(from viewController:UIViewController,track:AudioTrack){
+       guard let url = URL(string: track.preview_url ?? "") else {
+           return
+       }
+       player = AVPlayer(url: url)
+       player?.volume = 0.5
+       let vc = PlayerViewController()
+       vc.datasouce = self
+       vc.delegate = self
+       vc.title = track.name
+       self.track = track
+       self.tracks = []
+        
+       viewController.present(UINavigationController(rootViewController: vc), animated: true, completion: { [weak self] in
+           self?.player?.play()
+       })
+        self.playerVC = vc
+   }
      func startPlaying(from viewController:UIViewController,tracks:[AudioTrack]){
         
         let vc = PlayerViewController()
+        vc.datasouce = self
+        vc.delegate = self
+        vc.title = ""
         self.track = nil
         self.tracks = tracks
         let items:[AVPlayerItem] = tracks.compactMap({
             guard let url = URL(string: $0.preview_url ?? "") else {return nil}
             return AVPlayerItem(url: url)
         })
-        self.playerQueue?.play()
+       
         self.playerQueue = AVQueuePlayer(items: items)
-        viewController.present(UINavigationController(rootViewController: vc), animated: true, completion: nil)
+        
+        self.playerQueue?.volume = 0.5
+        viewController.present(UINavigationController(rootViewController: vc), animated: true) {[weak self] in
+            self?.playerQueue?.play()
+        }
+        self.playerVC = vc
     }
     
 }
@@ -90,30 +96,34 @@ extension PlaybackPresenter:PlayerViewControllerDelegate{
     }
     
     func didTapForward() {
+       
         if tracks.isEmpty{
-            // only tracks so it will pauser
+            // only track so it will pauser
             player?.pause()
         }
         else if let player = playerQueue{
+// bug :- some previus url are nulls so view go out with song playing so handle them carefully and remove this bug
             player.advanceToNextItem()
+            index+=1
+            print(index)
+            playerVC?.refereshUI()
         }
     }
     
     func didTapBackward() {
+     
         if tracks.isEmpty{
             // only tracks so it will pauser
             player?.pause()
-            player?.play()
+            
         }
-        else if let player = playerQueue{
-//            let a = player.items()
-//            player.pause()
-//            player.removeAllItems()
-//            playerQueue = AVQueuePlayer(items: a)
-//            playerQueue?.play()
-            player.pause()
+        else  if let playerItem = playerQueue?.items().first{
+            playerQueue?.pause()
+            playerQueue?.removeAllItems()
+            playerQueue = AVQueuePlayer(items: [playerItem])
+            playerQueue?.play()
+            playerQueue?.volume = 0.5
         }
-
     }
     
     
