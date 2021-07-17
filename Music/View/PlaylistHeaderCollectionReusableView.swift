@@ -84,7 +84,7 @@ final class PlaylistHeaderCollectionReusableView: UICollectionReusableView {
         nameLabel.text = viewModel.name
         ownerLabel.text = viewModel.ownerName
         descriptionLabel.text = viewModel.discription
-        imageView.sd_setImage(with: viewModel.artWorkUrl, completed: nil)
+        imageView.sd_setImage(with: viewModel.artWorkUrl,placeholderImage: UIImage(systemName: "photo"),completed: nil)
     }
     
 }

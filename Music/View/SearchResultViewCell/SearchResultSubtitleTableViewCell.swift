@@ -52,7 +52,7 @@ class SearchResultSubtitleTableViewCell: UITableViewCell {
     func configure(title:String,subtitle:String,url:URL?){
         label.text = title
         sublabel.text = subtitle
-        displayImageView.sd_setImage(with: url, completed: nil)
+        displayImageView.sd_setImage(with: url, placeholderImage: UIImage(systemName: "photo"),completed: nil)
     }
     
 
