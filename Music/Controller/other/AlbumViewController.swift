@@ -48,7 +48,16 @@ class AlbumViewController: UIViewController {
         collectionView.delegate = self
         collectionView.register(PlaylistHeaderCollectionReusableView.self, forSupplementaryViewOfKind: UICollectionView.elementKindSectionHeader, withReuseIdentifier: PlaylistHeaderCollectionReusableView.identifier)
         collectionView.dataSource = self
-
+        fetchData()
+        navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(didTapAction))
+        
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        collectionView.frame = view.bounds
+    }
+    private func fetchData(){
         APICaller.shared.getAlbumDetails(album: album) { [weak self]result in
             DispatchQueue.main.async {
                 switch result{
@@ -61,16 +70,18 @@ class AlbumViewController: UIViewController {
                     break
                 case .failure(let error):
                     print("Error occured \(error)")
-                break
+                    break
                 }
             }
         }
-  
     }
-    
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        collectionView.frame = view.bounds
+    @objc private func didTapAction(){
+        let actionSheet = UIAlertController(title: album.name, message: "Add Album", preferredStyle: .actionSheet)
+        actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        actionSheet.addAction(UIAlertAction(title: "Add", style: .default, handler: { _ in
+            
+        }))
+        present(actionSheet, animated: true, completion: nil)
     }
 }
 

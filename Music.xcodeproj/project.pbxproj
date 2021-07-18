@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		0B0A720626A4B4DE00C6D89A /* LibraryAlbumResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B0A720526A4B4DE00C6D89A /* LibraryAlbumResponse.swift */; };
 		0B29CD5326A3495F006F3760 /* LibraryPlaylistResponse.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B29CD5226A3495F006F3760 /* LibraryPlaylistResponse.swift */; };
 		0B29CD5526A34BE7006F3760 /* ActionLabelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B29CD5426A34BE7006F3760 /* ActionLabelView.swift */; };
 		0B381DBC269B5CD80037E9BA /* NewReleasesCellViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B381DBB269B5CD80037E9BA /* NewReleasesCellViewModel.swift */; };
@@ -71,6 +72,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0B0A720526A4B4DE00C6D89A /* LibraryAlbumResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryAlbumResponse.swift; sourceTree = "<group>"; };
 		0B29CD5226A3495F006F3760 /* LibraryPlaylistResponse.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryPlaylistResponse.swift; sourceTree = "<group>"; };
 		0B29CD5426A34BE7006F3760 /* ActionLabelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActionLabelView.swift; sourceTree = "<group>"; };
 		0B381DBB269B5CD80037E9BA /* NewReleasesCellViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewReleasesCellViewModel.swift; sourceTree = "<group>"; };
@@ -224,6 +226,7 @@
 				0BAFFB1A269F5382007DF196 /* SearchResultResponse.swift */,
 				0BAFFB1E269F560D007DF196 /* SearchResult.swift */,
 				0B29CD5226A3495F006F3760 /* LibraryPlaylistResponse.swift */,
+				0B0A720526A4B4DE00C6D89A /* LibraryAlbumResponse.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -467,6 +470,7 @@
 				0BF04BF726A20B0F00C9ADA0 /* LibraryPlaylistViewController.swift in Sources */,
 				0BF16E7026920930007F2F9B /* WelcomeViewController.swift in Sources */,
 				0BAFFB1B269F5382007DF196 /* SearchResultResponse.swift in Sources */,
+				0B0A720626A4B4DE00C6D89A /* LibraryAlbumResponse.swift in Sources */,
 				0BA0C893269CB20800C319F6 /* AlbumDetailResponse.swift in Sources */,
 				0B381DBC269B5CD80037E9BA /* NewReleasesCellViewModel.swift in Sources */,
 				0BAFFB22269F65FE007DF196 /* SearchResultTableViewCell.swift in Sources */,

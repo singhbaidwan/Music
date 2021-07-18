@@ -10,6 +10,7 @@ import UIKit
 class LibraryPlaylistViewController: UIViewController {
     var playlist=[Playlist]()
     private let noPlaylistView = ActionLabelView()
+    public var selectionHandler:((Playlist)->Void)?
     private let tableView:UITableView = {
         let tableView=UITableView(frame: .zero,style: .grouped)
         tableView.register(SearchResultSubtitleTableViewCell.self, forCellReuseIdentifier: SearchResultSubtitleTableViewCell.identifier)
@@ -25,6 +26,13 @@ class LibraryPlaylistViewController: UIViewController {
         fetchUserPlaylist()
         updateUI()
         setUpNoPlaylistView()
+        if selectionHandler != nil {
+            navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .close, target: self, action: #selector(didTapClose))
+        }
+    }
+    
+    @objc func didTapClose(){
+        dismiss(animated: true, completion: nil)
     }
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
@@ -56,7 +64,7 @@ class LibraryPlaylistViewController: UIViewController {
                 switch result{
                 case .success(let model):
                     self?.playlist = model
-                    print("playlist \(self?.playlist.count)")
+//                    print("playlist \(self?.playlist.count)")
                     self?.updateUI()
                     break
                 case .failure(let error): break
@@ -115,8 +123,14 @@ extension LibraryPlaylistViewController:UITableViewDelegate,UITableViewDataSourc
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         let plist = playlist[indexPath.row]
+        guard selectionHandler==nil else{
+            selectionHandler?(plist)
+            dismiss(animated: true, completion: nil)
+            return
+        }
         let vc = PlaylistViewController(playlist: plist)
         vc.navigationItem.largeTitleDisplayMode = .never
+        vc.isOwner = true
         navigationController?.pushViewController(vc, animated: true)
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {

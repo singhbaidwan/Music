@@ -18,6 +18,7 @@ final class APICaller{
     enum HTTPMethod:String{
         case GET
         case POST
+        case DELETE
     }
     enum APIError:Error{
         case failedToGetData
@@ -190,6 +191,28 @@ extension APICaller{
         }
     }
     
+    public func getCurrentUserAlbum(completion:@escaping(Result<[Album],Error>)->Void) {
+        createRequest(with:URL(string: Constants.baseAPIURL+"/me/albums"), type: .GET) { request in
+            let task = URLSession.shared.dataTask(with: request) { data, _, error in
+                guard let data = data,error==nil else
+                {
+                    completion(.failure(APIError.failedToGetData))
+                    return
+                }
+                do{
+                    let result = try JSONDecoder().decode(LibraryAlbumResponse.self, from: data)
+//                    completion(.success())
+                    print(result)
+                }
+                catch{
+                    print(error.localizedDescription)
+                    completion(.failure(error))
+                }
+            }
+            task.resume()
+        }
+    }
+    
     
     //    MARK:- Playlist
     public func getPlaylistDetails(for playlist:Playlist,completion:@escaping(Result<PlaylistDetailResponse,Error>)->Void){
@@ -222,7 +245,7 @@ extension APICaller{
                 do{
                     let result = try JSONDecoder().decode(LibraryPlaylistResponse.self, from: data)
                     completion(.success(result.items))
-                    print(result)
+//                    print(result)
                 }
                 catch{
                     print(error)
@@ -280,11 +303,11 @@ extension APICaller{
         createRequest(with: URL(string: Constants.baseAPIURL+"/playlists/\(playlist.id)/tracks"), type: .POST) { baseRequest in
              var request = baseRequest
             let jsons = [
-                "uris":"spotify:track:\(track.id)"
+                "uris":["spotify:track:\(track.id)"]
             ]
             request.httpBody = try? JSONSerialization.data(withJSONObject: jsons, options: .fragmentsAllowed)
             request.addValue("application/json", forHTTPHeaderField: "Content-Type")
-            let task = URLSession().dataTask(with: request) { data, _, error in
+            let task = URLSession.shared.dataTask(with: request) { data, _, error in
                 guard let data = data,error==nil else{
                     completion(false)
                     return
@@ -292,9 +315,12 @@ extension APICaller{
                 }
                 do{
                     let result = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
-                    print(result)
+//                    print(result)
                     if let response = result as? [String : Any] , response["snapshot_id"] as? String != nil{
                      completion(true)
+                    }
+                    else{
+                        completion(false)
                     }
                 }
                 catch{
@@ -305,7 +331,41 @@ extension APICaller{
             task.resume()
         }
     }
-    public func removeTrackFromPlaylist(track:AudioTrack,playlist:Playlist,completion:@escaping(Bool)->Void){}
+    public func removeTrackFromPlaylist(track:AudioTrack,playlist:Playlist,completion:@escaping(Bool)->Void){
+        createRequest(with: URL(string: Constants.baseAPIURL+"/playlists/\(playlist.id)/tracks"), type: .DELETE) { baseRequest in
+             var request = baseRequest
+            let jsons = [
+                "tracks":[[
+                    "uri":"spotify:track:\(track.id)"
+                ]]
+            ]
+            request.httpBody = try? JSONSerialization.data(withJSONObject: jsons, options: .fragmentsAllowed)
+            request.addValue("application/json", forHTTPHeaderField: "Content-Type")
+            let task = URLSession.shared.dataTask(with: request) { data, _, error in
+                guard let data = data,error==nil else{
+                    completion(false)
+                    return
+                    
+                }
+                do{
+                    let result = try JSONSerialization.jsonObject(with: data, options: .allowFragments)
+//                    print(result)
+                    if let response = result as? [String : Any] , response["snapshot_id"] as? String != nil{
+                     completion(true)
+                    }
+                    else{
+                        print(error?.localizedDescription)
+                        completion(false)
+                    }
+                }
+                catch{
+                    print(error.localizedDescription)
+                    completion(false)
+                }
+            }
+            task.resume()
+        }
+    }
     
     //    MARK:- Categories
     public func getAllCategories(completion:@escaping(Result<[Category],Error>)->Void){

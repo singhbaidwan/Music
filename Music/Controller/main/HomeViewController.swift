@@ -52,12 +52,45 @@ class HomeViewController: UIViewController {
         configureCollectionView()
         view.addSubview(spinner)
          fetchData()
-        
+        addLongTapGestureRecognizer()
     }
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         collectionView.frame = view.bounds
     }
+    private func addLongTapGestureRecognizer(){
+        let gesture = UILongPressGestureRecognizer(target: self, action: #selector(didLongPress(_:)))
+        collectionView.isUserInteractionEnabled = true
+        collectionView.addGestureRecognizer(gesture)
+        
+    }
+    @objc func didLongPress(_ gesture:UILongPressGestureRecognizer){
+        guard gesture.state == .began else {
+            return
+        }
+        let touchPoint = gesture.location(in: collectionView)
+        guard let indexPath = collectionView.indexPathForItem(at: touchPoint),indexPath.section==2 else{
+            return
+        }
+        let trackModel = tracks[indexPath.row]
+        let actionSheet = UIAlertController(title: trackModel.name, message: "Add it in Playlist", preferredStyle: .actionSheet)
+        actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
+        actionSheet.addAction(UIAlertAction(title: "Add", style: .default, handler: { [weak self]_ in
+            DispatchQueue.main.async {
+                let vc = LibraryPlaylistViewController()
+                vc.navigationItem.largeTitleDisplayMode = .never
+                vc.selectionHandler = { playlist in
+                    APICaller.shared.addTrackToPlaylist(track: trackModel, playlist: playlist) { success in
+                        print("Added to the Playlist \(success)")
+                    }
+                }
+                vc.title = "Select Playlist"
+                self?.present(UINavigationController(rootViewController: vc), animated: true, completion: nil)
+            }
+        }))
+        present(actionSheet, animated: true, completion: nil)
+    }
+    
     private func configureCollectionView(){
         view.addSubview(collectionView)
         collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "cell")
