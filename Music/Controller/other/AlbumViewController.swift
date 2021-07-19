@@ -78,8 +78,17 @@ class AlbumViewController: UIViewController {
     @objc private func didTapAction(){
         let actionSheet = UIAlertController(title: album.name, message: "Add Album", preferredStyle: .actionSheet)
         actionSheet.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        actionSheet.addAction(UIAlertAction(title: "Add", style: .default, handler: { _ in
-            
+        actionSheet.addAction(UIAlertAction(title: "Add", style: .default, handler: {[weak self] _ in
+            guard let strongSelf = self else {return}
+            APICaller.shared.saveAlbum(album: strongSelf.album) { success in
+                if success{
+                    HapticManager.shared.vibrate(for: .success)
+                    NotificationCenter.default.post(name: .albumSaveNotification, object:  nil)
+                }
+                else{
+                    HapticManager.shared.vibrate(for: .error)
+                }
+            }
         }))
         present(actionSheet, animated: true, completion: nil)
     }

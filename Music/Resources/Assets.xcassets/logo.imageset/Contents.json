@@ -1,0 +1,23 @@
+{
+  "images" : [
+    {
+      "filename" : "spotify-logo-png-7079.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "filename" : "spotify-logo-png-7080.png",
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "filename" : "spotify-logo-png-7081.png",
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

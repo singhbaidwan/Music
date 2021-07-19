@@ -16,6 +16,7 @@ class LibraryAlbumViewController: UIViewController {
         tableView.isHidden = true
         return tableView
     }()
+    private var observer:NSObjectProtocol?
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
@@ -25,7 +26,9 @@ class LibraryAlbumViewController: UIViewController {
         fetchUserAlbum()
         updateUI()
         setUpNoPlaylistView()
-       
+        observer = NotificationCenter.default.addObserver(forName: .albumSaveNotification, object: nil, queue: .main, using: { [weak self]_ in
+            self?.fetchUserAlbum()
+        })
     }
     
     @objc func didTapClose(){
@@ -34,7 +37,7 @@ class LibraryAlbumViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         noAlbumView.frame = CGRect(x: (view.width-150)/2, y: (view.height-150)/2, width: 150, height: 150)
-        tableView.frame = view.bounds
+        tableView.frame = CGRect(x: 0, y: 0, width: view.width, height: view.height )
     }
     private func updateUI(){
         print(albums.count)
@@ -55,6 +58,7 @@ class LibraryAlbumViewController: UIViewController {
     }
     private func fetchUserAlbum()
     {
+        albums.removeAll()
         APICaller.shared.getCurrentUserAlbum { [weak self] result in
             DispatchQueue.main.async {
                 switch result{
@@ -95,6 +99,7 @@ extension LibraryAlbumViewController:UITableViewDelegate,UITableViewDataSource{
     }
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
+        HapticManager.shared.vibrateForSelection()
         let album = albums[indexPath.row]
         let vc = AlbumViewController(album: album)
         vc.navigationItem.largeTitleDisplayMode = .never

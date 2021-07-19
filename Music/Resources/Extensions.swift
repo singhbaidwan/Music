@@ -49,3 +49,8 @@ extension String{
         return DateFormatter.displayDateFormatter.string(from: date)
     }
 }
+
+// created notification for user album view contoller to show update ui when the albums gets updates
+extension Notification.Name{
+    static let albumSaveNotification = Notification.Name("albumSaveNotification")
+}
