@@ -12,8 +12,8 @@ class WelcomeViewController: UIViewController {
     private let signInbutton:UIButton = {
          let button = UIButton()
         button.backgroundColor = .white
-        button.setTitle("SIgn In with Spotify", for: .normal)
-        button.setTitleColor(.blue, for: .normal)
+        button.setTitle("Sign In with Spotify", for: .normal)
+        button.setTitleColor(.black, for: .normal)
         return button
     }()
     private let backgroundImageView:UIImageView = {
@@ -37,13 +37,14 @@ class WelcomeViewController: UIViewController {
        let label = UILabel()
         label.numberOfLines = 0
         label.textColor = .white
+        label.textAlignment = .center
         label.font = .systemFont(ofSize: 32,weight:.semibold)
         label.text = "Listen to Millions\nof Songs on\nthe go"
         return label
     }()
     override func viewDidLoad() {
         super.viewDidLoad()
-        title = "NewSpotify"
+        title = "Music"
         view.backgroundColor = .black
         view.addSubview(backgroundImageView)
         view.addSubview(overlayView)
@@ -58,7 +59,8 @@ class WelcomeViewController: UIViewController {
         overlayView.frame = view.bounds
         backgroundImageView.frame = view.bounds
         signInbutton.frame = CGRect(x: 20, y: view.height-50-view.safeAreaInsets.bottom, width: view.width-40, height: 50)
-        
+        logoImageView.frame = CGRect(x: (view.width-120)/2, y: (view.height-200)/2, width: 120, height: 120)
+        label.frame = CGRect(x: 30, y: logoImageView.bottom+30, width: view.width-60, height: 150)
     }
     
     @objc func didTapSignIn(){
